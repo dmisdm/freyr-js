@@ -7,9 +7,7 @@
   "scripts": {
     "push": "git push github master"
   },
-  "bin": {
-    "freyr": "./cli.js"
-  },
+  "bin": "./cli.js",
   "engines": {
     "node": ">=12"
   },
@@ -52,7 +50,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@yujinakayama/apple-music": "^0.4.1",
+    "@dmisdm/apple-music": "dmisdm/apple-music-node#8ae1dc00f694d20eff60cb38cd3be6313f891132",
     "async": "^3.2.4",
     "bluebird": "^3.7.2",
     "commander": "^9.3.0",
@@ -101,15 +99,9 @@
         "cli-color": "2.0.2",
         "string-width": "5.1.2"
       }
-    },
-    "@yujinakayama/apple-music": {
-      "axios": "0.27.2"
     }
   },
   "resolutions": {
-    "@yujinakayama/apple-music/axios": "0.27.2",
-    "yt-search/node-fzf": "0.11.0",
-    "yt-search/node-fzf/cli-color": "2.0.2",
-    "yt-search/node-fzf/string-width": "5.1.2"
+    "yt-search/node-fzf": "0.11.0"
   }
 }
