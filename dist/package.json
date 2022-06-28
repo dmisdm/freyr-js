@@ -2,10 +2,10 @@
     "name": "freyr",
     "version": "0.7.0",
     "description": "A versatile, service-agnostic music downloader and manager",
+    "main": "./dist/src/main.js",
     "scripts": {
         "push": "git push github master"
     },
-    "bin": "./dist/src/cli.js",
     "engines": {
         "node": ">=12"
     },

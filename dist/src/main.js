@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.main = void 0;
 /* eslint-disable consistent-return, camelcase, prefer-promise-reject-errors */
 const fs_1 = __importDefault(require("fs"));
 const url_1 = __importDefault(require("url"));
@@ -1828,4 +1829,4 @@ async function main(argv) {
                 : err}`);
     }
 }
-main(process.argv);
+exports.main = main;

@@ -2501,7 +2501,7 @@ function prepCli(packageJson) {
   return program;
 }
 
-async function main(argv) {
+export async function main(argv) {
   let { program } = prepCli(packageJson);
 
   if (!(argv.includes("-v") || argv.includes("--version"))) {
@@ -2527,5 +2527,3 @@ async function main(argv) {
     );
   }
 }
-
-main(process.argv);
