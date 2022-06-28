@@ -10,10 +10,7 @@
     "node": ">=12"
   },
   "files": [
-    "src",
-    "typings",
-    "conf.json",
-    "banner.js"
+    "dist"
   ],
   "directories": {
     "lib": "src"
