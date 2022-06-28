@@ -529,10 +529,11 @@ export async function init(
     {
       retries: 10,
       metaRetries: 5,
-      cover: "cover.png",
       chunks: 7,
       timeout: 10000,
       bitrate: "320k",
+      format: "mp3",
+      tree: true,
     },
     _options
   );

@@ -39,6 +39,7 @@ const stack_logger_js_1 = __importDefault(require("./stack_logger.js"));
 const stream_utils_js_1 = __importDefault(require("./stream_utils.js"));
 const filter_parser_js_1 = __importDefault(require("./filter_parser.js"));
 const package_json_1 = __importDefault(require("../package.json"));
+const conf_json_1 = __importDefault(require("../conf.json"));
 function parseMeta(params) {
     return Object.entries(params || {})
         .filter(([, value]) => ![undefined, null].includes(value))
@@ -454,17 +455,17 @@ async function init(queries, _options) {
         stackLogger.error("\x1b[31m[i]\x1b[0m Please enter a valid query"),
             process.exit(1);
     try {
-        const filter = CHECK_FILTER_FIELDS([], {
+        options.filter = CHECK_FILTER_FIELDS([], {
             filterCase: undefined,
         });
-        const concurrency = Object.fromEntries([]
+        options.concurrency = Object.fromEntries([]
             .map((item) => (([k, v]) => (v ? [k, v] : ["tracks", k]))(item.split("=")))
             .map(([k, v]) => {
             if (!VALIDS.concurrency.includes(k))
                 throw Error(`key identifier for the \`-z, --concurrency\` flag must be valid. found [key: ${k}]`);
             return [k, CHECK_FLAG_IS_NUM(v, "-z, --concurrency", "number")];
         }));
-        const downloader = PROCESS_DOWNLOADER_ORDER("".split(","), (item) => {
+        options.downloader = PROCESS_DOWNLOADER_ORDER("".split(","), (item) => {
             throw new Error(`downloader specification within the \`--downloader\` must be valid. found [${item}]`);
         });
     }
@@ -472,7 +473,7 @@ async function init(queries, _options) {
         stackLogger.error("\x1b[31m[i]\x1b[0m", err.message || err);
         process.exit(2);
     }
-    let Config = {
+    let Config = lodash_1.default.merge({
         server: {
             hostname: "localhost",
             port: 36346,
@@ -512,7 +513,7 @@ async function init(queries, _options) {
             cacheSize: 209715200,
             order: ["yt_music", "youtube"],
         },
-    };
+    }, conf_json_1.default);
     try {
         const errMessage = new Error(`[key: image, value: ${JSON.stringify(Config.image)}]`);
         if (!(Config.image = PROCESS_IMAGE_SIZE(Config.image)))
@@ -1326,7 +1327,7 @@ async function init(queries, _options) {
         stackLogger.log("[\u2022] Collation Complete");
         return allTrackStats;
     });
-    const totalQueries = [...options.input, ...queries];
+    const totalQueries = queries;
     //@ts-expect-error
     const trackStats = (await (0, p_flatten_js_1.default)(queryQueue.push(totalQueries))).filter(Boolean);
     if ((options.playlist && typeof options.playlist === "string") ||
