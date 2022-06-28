@@ -549,7 +549,7 @@ function CHECK_FILTER_FIELDS(arrayOfFields, props = {}) {
   return handler;
 }
 
-async function init(packageJson, queries, options) {
+export async function init(packageJson, queries, options) {
   const initTimeStamp = Date.now();
   const stackLogger = new StackLogger({ indentSize: 1, autoTick: false });
   if (!((Array.isArray(queries) && queries.length > 0) || options.input))

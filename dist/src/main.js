@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.main = void 0;
+exports.main = exports.init = void 0;
 /* eslint-disable consistent-return, camelcase, prefer-promise-reject-errors */
 const fs_1 = __importDefault(require("fs"));
 const url_1 = __importDefault(require("url"));
@@ -1444,6 +1444,7 @@ async function init(packageJson, queries, options) {
         stackLogger.log("===============================");
     }
 }
+exports.init = init;
 function prepCli(packageJson) {
     const program = commander_1.program
         .addHelpCommand(true)
