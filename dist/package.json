@@ -7,7 +7,8 @@
         "freyr": "./dist/src/cli.js"
     },
     "scripts": {
-        "push": "git push github master"
+        "push": "git push github master",
+        "start": "node ./dist/src/cli.js"
     },
     "engines": {
         "node": ">=12"
