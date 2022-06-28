@@ -2,12 +2,10 @@
   "name": "freyr",
   "version": "0.7.0",
   "description": "A versatile, service-agnostic music downloader and manager",
-  "exports": "./src/freyr.js",
-  "type": "module",
   "scripts": {
     "push": "git push github master"
   },
-  "bin": "./cli.js",
+  "bin": "./dist/src/cli.js",
   "engines": {
     "node": ">=12"
   },
@@ -51,6 +49,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@dmisdm/apple-music": "dmisdm/apple-music-node#8ae1dc00f694d20eff60cb38cd3be6313f891132",
+    "@types/node": "^18.0.0",
     "async": "^3.2.4",
     "bluebird": "^3.7.2",
     "commander": "^9.3.0",
@@ -60,9 +59,9 @@
     "country-data": "0.0.31",
     "es-main": "^1.0.2",
     "express": "^4.18.1",
-    "filenamify": "^5.1.1",
+    "filenamify": "4.3.0",
     "fluent-ffmpeg": "^2.1.2",
-    "got": "^12.1.0",
+    "got": "11",
     "hh-mm-ss": "^1.2.0",
     "html-entities": "^2.3.3",
     "isbinaryfile": "^5.0.0",
@@ -73,8 +72,8 @@
     "mkdirp": "^1.0.4",
     "node-cache": "^5.1.2",
     "open": "^8.4.0",
-    "pretty-ms": "^8.0.0",
-    "public-ip": "^6.0.1",
+    "pretty-ms": "7",
+    "public-ip": "4",
     "spotify-uri": "^3.0.2",
     "spotify-web-api-node": "^5.0.2",
     "stringd": "^2.1.0",
@@ -88,9 +87,11 @@
   },
   "devDependencies": {
     "@babel/eslint-parser": "7.18.2",
+    "@tsconfig/node16": "^1.0.3",
     "eslint": "8.18.0",
     "eslint-plugin-prettier": "4.0.0",
-    "prettier": "2.7.1"
+    "prettier": "2.7.1",
+    "typescript": "^4.7.4"
   },
   "overrides": {
     "yt-search": {

@@ -1,0 +1,59 @@
+{
+    "server": {
+        "hostname": "localhost",
+        "port": 36346,
+        "useHttps": false
+    },
+    "concurrency": {
+        "queries": 1,
+        "tracks": 1,
+        "trackStage": 6,
+        "downloader": 4,
+        "encoder": 6,
+        "embedder": 10
+    },
+    "opts": {
+        "netCheck": true,
+        "attemptAuth": true,
+        "autoOpenBrowser": true
+    },
+    "filters": [],
+    "dirs": {
+        "output": ".",
+        "cache": "<tmp>"
+    },
+    "playlist": {
+        "always": false,
+        "append": true,
+        "escape": true,
+        "forceAppend": false,
+        "dir": "",
+        "namespace": ""
+    },
+    "image": {
+        "width": 640,
+        "height": 640
+    },
+    "downloader": {
+        "memCache": true,
+        "cacheSize": 209715200,
+        "order": [
+            "yt_music",
+            "youtube"
+        ]
+    },
+    "services": {
+        "spotify": {
+            "clientId": "888aa4540c09464abc9ed8bbe2a5f18a",
+            "clientSecret": "84e7ab36abed48318bfb2eae7b32415d",
+            "refreshToken": "AQARHDcUz57eA9O30HIrpMJPoVMtAIkYEuuRSpFCOlYYUfyYeqQ6wiagiOwRxhIySl_p_r4tcXuwvwxr9cvFG8wHOJo5D6jcn5EqV6kaFxPWeT2ktUFQWV_06AABatyj6II"
+        },
+        "apple_music": {
+            "storefront": "us",
+            "developerToken": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IldlYlBsYXlLaWQifQ.eyJpc3MiOiJBTVBXZWJQbGF5IiwiaWF0IjoxNjU0NTM2MzE3LCJleHAiOjE2NzAwODgzMTcsInJvb3RfaHR0cHNfb3JpZ2luIjpbImFwcGxlLmNvbSJdfQ.g7Etdjlkl01HK_MFMnHS5RjfxDFNASiLu2mFAeeMrOyrzEQRCDTdBGVkZYUEifdJGDRP01px3zX042lSHwmmrA"
+        },
+        "deezer": {
+            "retries": 2
+        }
+    }
+}

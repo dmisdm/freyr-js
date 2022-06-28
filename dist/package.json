@@ -1,0 +1,108 @@
+{
+    "name": "freyr",
+    "version": "0.7.0",
+    "description": "A versatile, service-agnostic music downloader and manager",
+    "scripts": {
+        "push": "git push github master"
+    },
+    "bin": "./dist/src/cli.js",
+    "engines": {
+        "node": ">=12"
+    },
+    "files": [
+        "src",
+        "typings",
+        "conf.json",
+        "banner.js"
+    ],
+    "directories": {
+        "lib": "src"
+    },
+    "keywords": [
+        "spotify",
+        "music-streaming",
+        "music",
+        "manager",
+        "download",
+        "track",
+        "album",
+        "artist",
+        "playlist",
+        "iTunes",
+        "mpeg-4",
+        "m4a",
+        "audio",
+        "320kbps"
+    ],
+    "author": {
+        "name": "Miraculous Owonubi",
+        "email": "omiraculous@gmail.com",
+        "url": "https://about.me/miraclx"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git@github.com:miraclx/freyr-js.git"
+    },
+    "bugs": {
+        "url": "https://github.com/miraclx/freyr-js/issues"
+    },
+    "license": "Apache-2.0",
+    "dependencies": {
+        "@dmisdm/apple-music": "dmisdm/apple-music-node#8ae1dc00f694d20eff60cb38cd3be6313f891132",
+        "@types/node": "^18.0.0",
+        "async": "^3.2.4",
+        "bluebird": "^3.7.2",
+        "commander": "^9.3.0",
+        "conf": "^10.1.2",
+        "cookie-parser": "^1.4.6",
+        "cors": "^2.8.5",
+        "country-data": "0.0.31",
+        "es-main": "^1.0.2",
+        "express": "^4.18.1",
+        "filenamify": "4.3.0",
+        "fluent-ffmpeg": "^2.1.2",
+        "got": "11",
+        "hh-mm-ss": "^1.2.0",
+        "html-entities": "^2.3.3",
+        "isbinaryfile": "^5.0.0",
+        "libxget": "^0.9.2",
+        "lodash": "^4.17.21",
+        "merge2": "^1.4.1",
+        "minimatch": "^5.1.0",
+        "mkdirp": "^1.0.4",
+        "node-cache": "^5.1.2",
+        "open": "^8.4.0",
+        "pretty-ms": "7",
+        "public-ip": "4",
+        "spotify-uri": "^3.0.2",
+        "spotify-web-api-node": "^5.0.2",
+        "stringd": "^2.1.0",
+        "stringd-colors": "^1.9.0",
+        "stripchar": "^1.2.1",
+        "tmp": "^0.2.1",
+        "xbytes": "^1.8.0",
+        "xprogress": "^0.18.0",
+        "youtube-dl-exec": "^2.0.12",
+        "yt-search": "^2.10.3"
+    },
+    "devDependencies": {
+        "@babel/eslint-parser": "7.18.2",
+        "@tsconfig/node16": "^1.0.3",
+        "eslint": "8.18.0",
+        "eslint-plugin-prettier": "4.0.0",
+        "prettier": "2.7.1",
+        "typescript": "^4.7.4"
+    },
+    "overrides": {
+        "yt-search": {
+            "node-fzf": {
+                ".": "0.11.0",
+                "cli-color": "2.0.2",
+                "string-width": "5.1.2"
+            }
+        }
+    },
+    "resolutions": {
+        "yt-search/node-fzf": "0.11.0"
+    }
+}
