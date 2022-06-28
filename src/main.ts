@@ -22,10 +22,7 @@ import minimatch from "minimatch";
 import filenamify from "filenamify";
 import TimeFormat from "hh-mm-ss";
 import ProgressBar from "xprogress";
-import countryData from "country-data";
-import { publicIpv4 } from "public-ip";
 import { isBinaryFile } from "isbinaryfile";
-import { program as commander } from "commander";
 import { decode as entityDecode } from "html-entities";
 
 import symbols from "./symbols.js";
@@ -39,48 +36,10 @@ import StackLogger from "./stack_logger.js";
 import streamUtils from "./stream_utils.js";
 import parseSearchFilter from "./filter_parser.js";
 import packageJson from "../package.json";
-
-async function pTimeout(timeout, fn) {
-  let timeoutSignal = Symbol("TimedOutSignal");
-  let f = fn();
-  let result = await Promise.race([f, setTimeout(timeout, timeoutSignal)]);
-  if (result == timeoutSignal) {
-    if (typeof f.cancel == "function") f.cancel();
-    throw new Error("Promise timed out");
-  }
-  return result;
-}
-
-async function pRetry(tries, fn) {
-  let result;
-  for (let _ in Array.apply(null, { length: tries })) {
-    try {
-      result = await fn();
-    } catch (err) {
-      (result = Promise.reject(err)).catch(() => {});
-    }
-  }
-  return result;
-}
-
-async function isOnline() {
-  try {
-    let _publicIp = await pRetry(2, () =>
-      pTimeout(2000, async (ip) => {
-        if ((ip = await publicIpv4()) == undefined)
-          throw new Error("unable to get public ip");
-        return ip;
-      })
-    );
-    return true;
-  } catch {
-    return false;
-  }
-}
-
+import baseConf from "../conf.json";
 function parseMeta(params) {
   return Object.entries(params || {})
-    .filter(([, value]) => ![undefined, null].includes(value))
+    .filter(([, value]) => ![undefined, null].includes(value as any))
     .map(([key, value]) =>
       Array.isArray(value)
         ? value.map((tx) =>
@@ -136,7 +95,7 @@ function wrapCliInterface(binaryNames, binaryPath) {
   }
   return (file, args, cb) => {
     if (typeof file === "string")
-      spawn(binaryPath, [file, ...parseMeta(args)], {
+      spawn(binaryPath, [file, ...(parseMeta(args) as any)], {
         env: extendPathOnEnv(path),
       }).on("close", cb);
   };
@@ -151,6 +110,7 @@ function getRetryMessage({
   totalBytes,
   lastErr,
 }) {
+  // @ts-expect-error
   return cStringd(
     [
       ":{color(red)}{⯈}:{color:close(red)} ",
@@ -192,6 +152,7 @@ function prepProgressGen(options) {
   return (size, slots, opts, indentLen, isFragment) => {
     const forceFirst =
       options.singleBar || slots.length === 1 || slots.length > 20;
+    //@ts-expect-error
     return ProgressBar.stream(size, slots, {
       forceFirst,
       length: 47,
@@ -283,6 +244,7 @@ async function processPromise(promise, logger, messageHandlers) {
 
   // formerly .pre
   if (messageHandlers.onInit !== false)
+    //@ts-expect-error
     handleResultOf(null, messageHandlers.onInit);
   const result = await Promise.resolve(
     typeof promise === "function" ? promise() : promise
@@ -358,6 +320,7 @@ function CHECK_BIT_RATE_VAL(bitrate_arg) {
   const bitrate = ((match) => (match ? match[1] : ""))(
     (bitrate_arg || "").match(/^(\d+)(?:k(?:b(?:it)?)?(?:ps|\/s)?)?$/i)
   );
+
   if (!(bitrate && VALIDS.bitrates.includes(+bitrate)))
     throw new Error(
       `Invalid bitrate specification: [${bitrate_arg}]. Bitrate should be either of [${VALIDS.bitrates.join(
@@ -506,6 +469,7 @@ function CHECK_FILTER_FIELDS(arrayOfFields, props = {}) {
               ((spec, object) => {
                 if (!(rule in object)) return;
                 return minimatch(`${object[rule]}`, spec, {
+                  //@ts-expect-error
                   nocase: !props.filterCase,
                 });
               })
@@ -549,7 +513,29 @@ function CHECK_FILTER_FIELDS(arrayOfFields, props = {}) {
   return handler;
 }
 
-export async function init(packageJson, queries, options) {
+export async function init(
+  queries: string[],
+  _options?: {
+    memCache?: number;
+    bitrate?: string;
+    timeout?: number;
+    chunks?: number;
+    retries?: number;
+    metaRetries?: number;
+    cover?: string;
+  }
+) {
+  const options: any = Object.assign(
+    {
+      retries: 10,
+      metaRetries: 5,
+      cover: "cover.png",
+      chunks: 7,
+      timeout: 10000,
+      bitrate: "320k",
+    },
+    _options
+  );
   const initTimeStamp = Date.now();
   const stackLogger = new StackLogger({ indentSize: 1, autoTick: false });
   if (!((Array.isArray(queries) && queries.length > 0) || options.input))
@@ -557,42 +543,12 @@ export async function init(packageJson, queries, options) {
       process.exit(1);
 
   try {
-    options.retries = CHECK_FLAG_IS_NUM(
-      `${options.retries}`.toLowerCase() === "infinite"
-        ? Infinity
-        : options.retries,
-      "-r, --retries",
-      "number"
-    );
-    options.metaRetries = CHECK_FLAG_IS_NUM(
-      `${options.metaRetries}`.toLowerCase() === "infinite"
-        ? Infinity
-        : options.metaRetries,
-      "-t, --meta-tries",
-      "number"
-    );
-    options.cover = options.cover && xpath.basename(options.cover);
-    options.chunks = CHECK_FLAG_IS_NUM(
-      options.chunks,
-      "-n, --chunks",
-      "number"
-    );
-    options.timeout = CHECK_FLAG_IS_NUM(options.timeout, "--timeout", "number");
-    options.bitrate = CHECK_BIT_RATE_VAL(options.bitrate);
-    options.input = await PROCESS_INPUT_ARG(options.input);
-    options.config = await PROCESS_CONFIG_ARG(options.config);
-    if (options.memCache)
-      options.memCache = CHECK_FLAG_IS_NUM(
-        options.memCache,
-        "--mem-cache",
-        "number"
-      );
-    options.filter = CHECK_FILTER_FIELDS(options.filter, {
-      filterCase: options.filterCase,
+    options.filter = CHECK_FILTER_FIELDS([], {
+      filterCase: undefined,
     });
     options.concurrency = Object.fromEntries(
-      (options.concurrency || [])
-        .map((item) =>
+      []
+        .map((item: any) =>
           (([k, v]) => (v ? [k, v] : ["tracks", k]))(item.split("="))
         )
         .map(([k, v]) => {
@@ -603,96 +559,62 @@ export async function init(packageJson, queries, options) {
           return [k, CHECK_FLAG_IS_NUM(v, "-z, --concurrency", "number")];
         })
     );
-    if (options.storefront) {
-      const data = countryData.lookup.countries({
-        alpha2: options.storefront.toUpperCase(),
-      });
-      if (data.length) options.storefront = data[0].alpha2.toLowerCase();
-      else
-        throw new Error(
-          "Country specification with the `--storefront` option is invalid"
-        );
-    }
 
-    if (options.coverSize) {
-      const err = new Error(
-        `Invalid \`--cover-size\` specification [${options.coverSize}]. (expected: <width>x<height> or <size> as <size>x<size>)`
+    options.downloader = PROCESS_DOWNLOADER_ORDER("".split(","), (item) => {
+      throw new Error(
+        `downloader specification within the \`--downloader\` must be valid. found [${item}]`
       );
-      if (!(options.coverSize = PROCESS_IMAGE_SIZE(options.coverSize)))
-        throw err;
-    }
-
-    options.downloader = PROCESS_DOWNLOADER_ORDER(
-      (options.downloader || "").split(","),
-      (item) => {
-        throw new Error(
-          `downloader specification within the \`--downloader\` must be valid. found [${item}]`
-        );
-      }
-    );
+    });
   } catch (err) {
     stackLogger.error("\x1b[31m[i]\x1b[0m", err.message || err);
     process.exit(2);
   }
 
-  let Config = {
-    server: {
-      hostname: "localhost",
-      port: 36346,
-      useHttps: false,
+  let Config: any = lodash.merge(
+    {
+      server: {
+        hostname: "localhost",
+        port: 36346,
+        useHttps: false,
+      },
+      opts: {
+        netCheck: true,
+        attemptAuth: true,
+        autoOpenBrowser: true,
+      },
+      dirs: {
+        output: ".",
+      },
+      playlist: {
+        always: false, // always create playlists for queries
+        append: true, // append to end of file for regular queries
+        escape: true, // whether or not to escape invalid characters
+        forceAppend: false, // whether or not to forcefully append collections as well
+        dir: null, // directory to write playlist to
+        namespace: null, // namespace to prefix playlist entries with
+      },
+      image: {
+        width: 640,
+        height: 640,
+      },
+      filters: [],
+      concurrency: {
+        queries: 1,
+        tracks: 1,
+        trackStage: 6,
+        downloader: 4,
+        encoder: 6,
+        embedder: 10,
+      },
+      downloader: {
+        memCache: true,
+        cacheSize: 209715200,
+        order: ["yt_music", "youtube"],
+      },
     },
-    opts: {
-      netCheck: true,
-      attemptAuth: true,
-      autoOpenBrowser: true,
-    },
-    dirs: {
-      output: ".",
-    },
-    playlist: {
-      always: false, // always create playlists for queries
-      append: true, // append to end of file for regular queries
-      escape: true, // whether or not to escape invalid characters
-      forceAppend: false, // whether or not to forcefully append collections as well
-      dir: null, // directory to write playlist to
-      namespace: null, // namespace to prefix playlist entries with
-    },
-    image: {
-      width: 640,
-      height: 640,
-    },
-    filters: [],
-    concurrency: {
-      queries: 1,
-      tracks: 1,
-      trackStage: 6,
-      downloader: 4,
-      encoder: 6,
-      embedder: 10,
-    },
-    downloader: {
-      memCache: true,
-      cacheSize: 209715200,
-      order: ["yt_music", "youtube"],
-    },
-  };
+    baseConf
+  );
   try {
-    if (fs.existsSync(options.config)) {
-      Config = lodash.mergeWith(
-        Config,
-        JSON.parse(fs.readFileSync(options.config)),
-        (a, b, k) =>
-          k === "order" && [a, b].every(Array.isArray) ? b.concat(a) : undefined
-      );
-    } else {
-      stackLogger.error(
-        `\x1b[31m[!]\x1b[0m Configuration file [${xpath.relative(
-          ".",
-          options.config
-        )}] not found`
-      );
-      process.exit(3);
-    }
     const errMessage = new Error(
       `[key: image, value: ${JSON.stringify(Config.image)}]`
     );
@@ -707,7 +629,6 @@ export async function init(packageJson, queries, options) {
         throw new Error(`Downloader order must be an array of strings`);
       }
     );
-    options.filter.extend(Config.filters);
   } catch (err) {
     stackLogger.error(
       `\x1b[31m[!]\x1b[0m Configuration file [${options.config}] wrongly formatted`
@@ -783,7 +704,7 @@ export async function init(packageJson, queries, options) {
     process.exit(6);
   }
 
-  const schema = {
+  const schema: any = {
     services: {
       type: "object",
       additionalProperties: false,
@@ -812,31 +733,9 @@ export async function init(packageJson, queries, options) {
   let atomicParsley;
 
   try {
-    if (options.ffmpeg) {
-      if (!fs.existsSync(options.ffmpeg))
-        throw new Error(
-          `\x1b[31mffmpeg\x1b[0m: Binary not found [${options.ffmpeg}]`
-        );
-      if (!(await isBinaryFile(options.ffmpeg)))
-        stackLogger.warn(
-          "\x1b[33mffmpeg\x1b[0m: Detected non-binary file, trying anyways..."
-        );
-      ffmpeg.setFfmpegPath(options.ffmpeg);
-    }
-
-    if (options.atomicParsley) {
-      if (!fs.existsSync(options.atomicParsley))
-        throw new Error(
-          `\x1b[31mAtomicParsley\x1b[0m: Binary not found [${options.atomicParsley}]`
-        );
-      if (!(await isBinaryFile(options.atomicParsley)))
-        stackLogger.warn(
-          "\x1b[33mAtomicParsley\x1b[0m: Detected non-binary file, trying anyways..."
-        );
-    }
     atomicParsley = wrapCliInterface(
       ["AtomicParsley", "atomicparsley"],
-      options.atomicParsley
+      undefined
     );
   } catch (err) {
     stackLogger.error(err.message);
@@ -945,7 +844,7 @@ export async function init(packageJson, queries, options) {
           retries: options.retries,
           timeout: options.timeout,
           cacheSize: Config.downloader.cacheSize,
-        })
+        } as any)
           .with("progressBar", (urlMeta) =>
             progressGen(
               urlMeta.size,
@@ -956,6 +855,7 @@ export async function init(packageJson, queries, options) {
             )
           )
           .use("progressBar", (dataSlice, store) =>
+            //@ts-expect-error
             store.get("progressBar").next(dataSlice.next)
           )
           .on("end", () => {
@@ -982,19 +882,23 @@ export async function init(packageJson, queries, options) {
             rej(err);
           });
         feed.setHeadHandler(({ acceptsRanges }) => {
+          //@ts-expect-error
           let [offset, writeStream] = [];
           if (acceptsRanges && fs.existsSync(outputFile))
+            //@ts-expect-error
             ({ size: offset } = fs.statSync(outputFile));
           if (offset) {
             opts.resumeHandler(offset);
+            //@ts-expect-error
             writeStream = fs.createWriteStream(outputFile, { flags: "a" });
+            //@ts-expect-error
           } else writeStream = fs.createWriteStream(outputFile, { flags: "w" });
-          feed
-            .pipe(writeStream)
-            .on(
-              "finish",
-              () => ((completed = true), res(writeStream.bytesWritten))
-            );
+          //@ts-expect-error
+          feed.pipe(writeStream).on(
+            "finish",
+            //@ts-expect-error
+            () => ((completed = true), res(writeStream.bytesWritten))
+          );
           return offset;
         });
         feed.start();
@@ -1018,7 +922,7 @@ export async function init(packageJson, queries, options) {
               retries: options.retries,
               timeout: options.timeout,
               cacheSize: Config.downloader.cacheSize,
-            })
+            } as any)
               .on("retry", (data) => {
                 if (opts.retryMessage !== false)
                   barGen.print(
@@ -1033,6 +937,7 @@ export async function init(packageJson, queries, options) {
                 if (has_erred) return feed.destroy();
                 err = Object(err);
                 has_erred = true;
+                //@ts-expect-error
                 err.segment_index = i;
                 barGen.end(opts.failureMessage(err), "\n");
                 opts.errorHandler(err);
@@ -1076,6 +981,7 @@ export async function init(packageJson, queries, options) {
             trackLogger.getText(`| ${getRetryMessage(data)}`),
           resumeHandler: (offset) =>
             trackLogger.log(
+              //@ts-expect-error
               cStringd(
                 `| :{color(yellow)}{i}:{color:close(yellow)} Resuming at ${offset}`
               )
@@ -1107,6 +1013,7 @@ export async function init(packageJson, queries, options) {
                 trackLogger.getText(`| ${getRetryMessage(data)}`),
               resumeHandler: (offset) =>
                 trackLogger.log(
+                  //@ts-expect-error
                   cStringd(
                     `| :{color(yellow)}{i}:{color:close(yellow)} Resuming at ${offset}`
                   )
@@ -1259,7 +1166,9 @@ export async function init(packageJson, queries, options) {
           (fs.copyFileSync(files.image.file.name, outArtPath), true))(
           xpath.join(meta.outFileDir, options.cover)
         );
+      //@ts-expect-error
       await encodeQueue.push({ track, meta, files });
+      //@ts-expect-error
       await embedQueue.push({ track, meta, files, audioSource });
       return { wroteImage, finalSize: fs.statSync(meta.outFilePath).size };
     }
@@ -1318,6 +1227,7 @@ export async function init(packageJson, queries, options) {
             throw new Error(`service returned no valid feeds for source`);
           return { sources, source, feeds, service: result.service };
         });
+        //@ts-expect-error
         result.results = result.sources.catch((err) => ({
           next: handleSource(iterator, err),
         }));
@@ -1333,7 +1243,7 @@ export async function init(packageJson, queries, options) {
       if (results.next) return collect_contained(results.next, handler);
       return results;
     }
-
+    //@ts-expect-error
     const process = handleSource(sourceStack.values());
     return async (handler) => collect_contained(process, handler);
   }
@@ -1391,6 +1301,7 @@ export async function init(packageJson, queries, options) {
         .update(`${audioSource.source.videoId} ${feedMeta.format_id}`)
         .digest("hex");
       const files = await downloadQueue
+        //@ts-expect-error
         .push({ track, meta, feedMeta, trackLogger })
         .catch((errObject) =>
           Promise.reject({
@@ -1403,6 +1314,7 @@ export async function init(packageJson, queries, options) {
       return {
         files,
         postprocess: postProcessor
+          //@ts-expect-error
           .push({ track, meta, files, audioSource })
           .catch((errObject) => ({ code: 9, ...errObject })),
       };
@@ -1457,14 +1369,17 @@ export async function init(packageJson, queries, options) {
           (results) => results[0]
         );
       const meta = { trackName, outFileDir, outFilePath, track, service };
-      return trackQueue
-        .push({
-          track,
-          meta,
-          props: { collectSources, fileExists, processTrack, logger },
-        })
-        .then((trackObject) => ({ ...trackObject, meta }))
-        .catch((errObject) => ({ meta, code: 10, ...errObject }));
+      return (
+        trackQueue
+          //@ts-expect-error
+          .push({
+            track,
+            meta,
+            props: { collectSources, fileExists, processTrack, logger },
+          })
+          .then((trackObject) => ({ ...trackObject, meta }))
+          .catch((errObject) => ({ meta, code: 10, ...errObject }))
+      );
     }
   );
 
@@ -1830,7 +1745,8 @@ export async function init(packageJson, queries, options) {
       return allTrackStats;
     }
   );
-  const totalQueries = [...options.input, ...queries];
+  const totalQueries = queries;
+  //@ts-expect-error
   const trackStats = (await pFlatten(queryQueue.push(totalQueries))).filter(
     Boolean
   );
@@ -1921,6 +1837,7 @@ export async function init(packageJson, queries, options) {
   }
 }
 
+/*
 function prepCli(packageJson) {
   const program = commander
     .addHelpCommand(true)
@@ -2517,4 +2434,4 @@ export async function main(argv) {
       }`
     );
   }
-}
+} */
