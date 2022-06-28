@@ -2504,15 +2504,6 @@ function prepCli(packageJson) {
 export async function main(argv) {
   let { program } = prepCli(packageJson);
 
-  if (!(argv.includes("-v") || argv.includes("--version"))) {
-    const showHeader = !argv.includes("--no-header");
-
-    if (showHeader) {
-      const credits = `freyr - (c) ${packageJson.author.name} <${packageJson.author.email}>`;
-      console.log([credits, "-".repeat(credits.length)].join("\n"));
-    }
-    if (argv.length === 2 + (!showHeader ? 1 : 0)) return program.outputHelp();
-  }
   try {
     await program.parseAsync(argv);
   } catch (err) {

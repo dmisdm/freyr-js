@@ -1809,15 +1809,6 @@ function prepCli(packageJson) {
 }
 async function main(argv) {
     let { program } = prepCli(package_json_1.default);
-    if (!(argv.includes("-v") || argv.includes("--version"))) {
-        const showHeader = !argv.includes("--no-header");
-        if (showHeader) {
-            const credits = `freyr - (c) ${package_json_1.default.author.name} <${package_json_1.default.author.email}>`;
-            console.log([credits, "-".repeat(credits.length)].join("\n"));
-        }
-        if (argv.length === 2 + (!showHeader ? 1 : 0))
-            return program.outputHelp();
-    }
     try {
         await program.parseAsync(argv);
     }
