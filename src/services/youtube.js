@@ -4,7 +4,6 @@ import util from 'util';
 import got from 'got';
 import Promise from 'bluebird';
 import ytSearch from 'yt-search';
-import youtubedl from 'youtube-dl-exec';
 
 import walk from '../walkr.js';
 import symbols from '../symbols.js';
@@ -49,9 +48,9 @@ function _getSearchArgs(artists, track, duration) {
  * )} YouTubeSearchResult
  */
 
-function genAsyncGetFeedsFn(url) {
+function genAsyncGetFeedsFn(ytdl, url) {
   return () =>
-    youtubedl(null, {
+    ytdl(null, {
       '--': [url],
       socketTimeout: 20,
       cacheDir: false,
@@ -72,6 +71,10 @@ export class YouTubeMusic {
   };
 
   [symbols.meta] = YouTubeMusic[symbols.meta];
+
+  constructor(config) {
+    this.config = config;
+  }
 
   #store = {
     gotInstance: got.extend({
@@ -326,7 +329,7 @@ export class YouTubeMusic {
             duration: item.duration,
             duration_ms: item.duration.split(':').reduce((acc, time) => 60 * acc + +time) * 1000,
             videoId: item.videoId,
-            getFeeds: genAsyncGetFeedsFn(item.videoId),
+            getFeeds: genAsyncGetFeedsFn(this.config.ytdl, item.videoId),
           };
           final[item.videoId].accuracy = calculateAccuracyFor(final[item.videoId]);
         }
@@ -351,7 +354,9 @@ export class YouTube {
   };
 
   [symbols.meta] = YouTube[symbols.meta];
-
+  constructor(config) {
+    this.config = config
+  }
   #store = {
     search: util.promisify(ytSearch),
     searchQueue: new AsyncQueue('YouTube:netSearchQueue', 4, async (strippedMeta, ...xFilters) =>
@@ -437,7 +442,7 @@ export class YouTube {
               videoId: item.videoId,
               xFilters: source.xFilters,
               accuracy: calculateAccuracyFor(item),
-              getFeeds: genAsyncGetFeedsFn(item.videoId),
+              getFeeds: genAsyncGetFeedsFn(this.config.ytdl, item.videoId),
             };
         });
     });

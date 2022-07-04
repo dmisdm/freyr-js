@@ -11,12 +11,12 @@ const deezer_js_1 = __importDefault(require("./services/deezer.js"));
 const spotify_js_1 = __importDefault(require("./services/spotify.js"));
 const apple_music_js_1 = __importDefault(require("./services/apple_music.js"));
 class FreyrCore {
-    constructor(ServiceConfig, AuthServer, serverOpts) {
+    constructor(ServiceConfig, AuthServer, serverOpts, ytdl) {
         this.identifyService = FreyrCore.identifyService;
         this.collateSources = FreyrCore.collateSources;
         this.sortSources = FreyrCore.sortSources;
         ServiceConfig = ServiceConfig || {};
-        this.ENGINES = FreyrCore.ENGINES.map(Engine => new Engine(ServiceConfig[Engine[symbols_js_1.default.meta].ID], AuthServer, serverOpts));
+        this.ENGINES = FreyrCore.ENGINES.map(Engine => new Engine({ ...ServiceConfig[Engine[symbols_js_1.default.meta].ID], ytdl }, AuthServer, serverOpts));
     }
     static getBitrates() {
         return Array.from(new Set(this.ENGINES.reduce((stack, engine) => stack.concat(engine[symbols_js_1.default.meta].BITRATES || []), []))).sort((a, b) => (typeof a === 'string' || a > b ? 1 : -1));

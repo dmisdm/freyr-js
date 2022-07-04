@@ -440,14 +440,15 @@ function CHECK_FILTER_FIELDS(arrayOfFields, props = {}) {
     };
     return handler;
 }
-async function init(queries, _options) {
+async function init(queries, ytdl, _options) {
     const options = Object.assign({
         retries: 10,
         metaRetries: 5,
-        cover: "cover.png",
         chunks: 7,
         timeout: 10000,
         bitrate: "320k",
+        format: "mp3",
+        tree: true,
     }, _options);
     const initTimeStamp = Date.now();
     const stackLogger = new stack_logger_js_1.default({ indentSize: 1, autoTick: false });
@@ -567,7 +568,7 @@ async function init(queries, _options) {
         process.exit(5);
     let freyrCore;
     try {
-        freyrCore = new freyr_js_1.default(Config.services, cli_server_js_1.default, Config.server);
+        freyrCore = new freyr_js_1.default(Config.services, cli_server_js_1.default, Config.server, ytdl);
     }
     catch (err) {
         stackLogger.error(`\x1b[31m[!]\x1b[0m Failed to initialize a Freyr Instance`);

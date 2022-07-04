@@ -43,9 +43,9 @@ export default class FreyrCore {
     return service.prototype.parseURI.call(service.prototype, url);
   }
 
-  constructor(ServiceConfig, AuthServer, serverOpts) {
+  constructor(ServiceConfig, AuthServer, serverOpts, ytdl) {
     ServiceConfig = ServiceConfig || {};
-    this.ENGINES = FreyrCore.ENGINES.map(Engine => new Engine(ServiceConfig[Engine[symbols.meta].ID], AuthServer, serverOpts));
+    this.ENGINES = FreyrCore.ENGINES.map(Engine => new Engine({...ServiceConfig[Engine[symbols.meta].ID], ytdl}, AuthServer, serverOpts));
   }
 
   identifyService = FreyrCore.identifyService;

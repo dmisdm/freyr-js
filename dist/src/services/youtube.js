@@ -15,7 +15,6 @@ const util_1 = __importDefault(require("util"));
 const got_1 = __importDefault(require("got"));
 const bluebird_1 = __importDefault(require("bluebird"));
 const yt_search_1 = __importDefault(require("yt-search"));
-const youtube_dl_exec_1 = __importDefault(require("youtube-dl-exec"));
 const walkr_js_1 = __importDefault(require("../walkr.js"));
 const symbols_js_1 = __importDefault(require("../symbols.js"));
 const text_utils_js_1 = __importDefault(require("../text_utils.js"));
@@ -63,8 +62,8 @@ function _getSearchArgs(artists, track, duration) {
  *   }[]
  * )} YouTubeSearchResult
  */
-function genAsyncGetFeedsFn(url) {
-    return () => (0, youtube_dl_exec_1.default)(null, {
+function genAsyncGetFeedsFn(ytdl, url) {
+    return () => ytdl(null, {
         '--': [url],
         socketTimeout: 20,
         cacheDir: false,
@@ -72,7 +71,7 @@ function genAsyncGetFeedsFn(url) {
     });
 }
 class YouTubeMusic {
-    constructor() {
+    constructor(config) {
         this[_b] = YouTubeMusic[symbols_js_1.default.meta];
         _YouTubeMusic_store.set(this, {
             gotInstance: got_1.default.extend({
@@ -244,6 +243,7 @@ class YouTubeMusic {
                 ];
             }));
         });
+        this.config = config;
     }
     /**
      * Search the YouTube Music service for matches
@@ -288,7 +288,7 @@ class YouTubeMusic {
                     duration: item.duration,
                     duration_ms: item.duration.split(':').reduce((acc, time) => 60 * acc + +time) * 1000,
                     videoId: item.videoId,
-                    getFeeds: genAsyncGetFeedsFn(item.videoId),
+                    getFeeds: genAsyncGetFeedsFn(this.config.ytdl, item.videoId),
                 };
                 final[item.videoId].accuracy = calculateAccuracyFor(final[item.videoId]);
             }
@@ -310,7 +310,7 @@ YouTubeMusic[_a] = {
     BITRATES: [96, 128, 160, 192, 256, 320],
 };
 class YouTube {
-    constructor() {
+    constructor(config) {
         this[_d] = YouTube[symbols_js_1.default.meta];
         _YouTube_store.set(this, {
             search: util_1.default.promisify(yt_search_1.default),
@@ -328,6 +328,7 @@ class YouTube {
                     : {}),
             }), { xFilters, highestViews: 0, results: [] })),
         });
+        this.config = config;
     }
     /**
      * Search YouTube service for matches
@@ -382,7 +383,7 @@ class YouTube {
                             videoId: item.videoId,
                             xFilters: source.xFilters,
                             accuracy: calculateAccuracyFor(item),
-                            getFeeds: genAsyncGetFeedsFn(item.videoId),
+                            getFeeds: genAsyncGetFeedsFn(this.config.ytdl, item.videoId),
                         };
                 });
         });

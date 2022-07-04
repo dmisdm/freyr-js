@@ -515,6 +515,7 @@ function CHECK_FILTER_FIELDS(arrayOfFields, props = {}) {
 
 export async function init(
   queries: string[],
+  ytdl,
   _options?: {
     memCache?: number;
     bitrate?: string;
@@ -696,7 +697,7 @@ export async function init(
 
   let freyrCore;
   try {
-    freyrCore = new FreyrCore(Config.services, AuthServer, Config.server);
+    freyrCore = new FreyrCore(Config.services, AuthServer, Config.server, ytdl);
   } catch (err) {
     stackLogger.error(
       `\x1b[31m[!]\x1b[0m Failed to initialize a Freyr Instance`
